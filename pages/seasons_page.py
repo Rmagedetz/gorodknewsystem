@@ -61,6 +61,7 @@ def rename_season():
                                 season_name=new_season_name)
         sql.Filials.rename_season(season_selector, new_season_name)
         sql.Groups.rename_season(season_selector, new_season_name)
+        sql.Records.rename_season(season_selector, new_season_name)
         st.rerun()
 
 

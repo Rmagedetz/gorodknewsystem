@@ -56,6 +56,51 @@ def del_group():
         st.rerun()
 
 
+@st.dialog('Редактирование группы')
+def edit_group():
+    seasons = sql.Seasons.get_df()['season_name']
+    season_selector = st.selectbox('Сезон', seasons)
+    filials = sql.Filials.get_df(season_name=season_selector)['filial_name']
+    filial_selector = st.selectbox('Филиал', filials)
+    groups = sql.Groups.get_df(season_name=season_selector,
+                               filial_name=filial_selector)['group_name']
+    groups_selector = st.selectbox('Название группы', groups)
+    if season_selector and filial_selector and groups_selector:
+        data = sql.Groups.get_df(season_name=season_selector,
+                                 filial_name=filial_selector,
+                                 group_name=groups_selector).reset_index()
+        start_date = st.date_input('Дата начала',
+                                   format='DD.MM.YYYY',
+                                   value=data['start_date'][0])
+        end_date = st.date_input('Дата окончания',
+                                 format='DD.MM.YYYY',
+                                 value=data['end_date'][0])
+        capacity = st.number_input('Вместимость',
+                                   value=data['capacity'][0])
+        if st.button('Редактировать группу', key='edit_group_accept'):
+            sql.Groups.edit_record(season_selector, filial_selector, groups_selector,
+                                   start_date=start_date,
+                                   end_date=end_date,
+                                   capacity=capacity)
+            st.rerun()
+
+
+@st.dialog('Переименование группы')
+def rename_group():
+    seasons = sql.Seasons.get_df()['season_name']
+    season_selector = st.selectbox('Сезон', seasons)
+    filials = sql.Filials.get_df(season_name=season_selector)['filial_name']
+    filial_selector = st.selectbox('Филиал', filials)
+    groups = sql.Groups.get_df(season_name=season_selector,
+                               filial_name=filial_selector)['group_name']
+    groups_selector = st.selectbox('Название группы', groups)
+    new_group_name = st.text_input('Новое название группы')
+    if st.button('Переименовать группу', key='rename_group_accept'):
+        sql.Groups.rename_group(season_selector, filial_selector, groups_selector, new_group_name)
+        sql.Records.rename_group(season_selector, filial_selector, groups_selector, new_group_name)
+        st.rerun()
+
+
 if st.button('Добавить группу', key='add_group', width=240):
     add_group()
 
@@ -63,7 +108,7 @@ if st.button('Удалить группу', key='del_group', width=240):
     del_group()
 
 if st.button('Редактировать группу', key='edit_group', width=240):
-    add_group()
+    edit_group()
 
 if st.button('Переименовать группу', key='rename_group', width=240):
-    add_group()
+    rename_group()

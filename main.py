@@ -47,13 +47,33 @@ filials_page = st.Page("pages/filials_page.py", title="Филиалы", icon=":m
 groups_page = st.Page("pages/groups_page.py", title="Группы", icon=":material/group:")
 
 records_page = st.Page("pages/records_page.py", title="Записи", icon=":material/table_view:", default=True)
+group_card_page = st.Page("pages/group_card_page.py", title="Вкладки групп", icon=":material/group:")
 
+child_page = st.Page("pages/children_page.py", title="Дети",
+                     icon=":material/child_hat:")
+parents_page = st.Page("pages/parents_page.py", title="Родители",
+                       icon=":material/account_child_invert:")
+
+ankets_page = st.Page("pages/ankets_page.py", title="Анкеты",
+                      icon=":material/frame_person:")
+
+payments_forms_page = st.Page("pages/payments_forms_page.py", title="Формы оплаты",
+                              icon=":material/credit_card_gear:")
+payments_options_page = st.Page("pages/payment_options_page.py", title="Тарифы",
+                                icon=":material/family_history:")
+payments_page = st.Page("pages/payments_page.py", title="Платежи",
+                        icon=":material/currency_ruble:")
+debits_page = st.Page("pages/debits_page.py", title="Списания",
+                      icon=":material/payment_arrow_down:")
 
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Администрирование": [logout_page, users_page, seasons_page, filials_page, groups_page],
-            "Дети и группы": [records_page]
+            "🔏 Администрирование": [logout_page, users_page, seasons_page, filials_page, groups_page],
+            "📚 Записи и группы": [records_page, group_card_page],
+            "💳 Платежи и списания": [payments_forms_page, payments_options_page, payments_page, debits_page],
+            "👨‍👨‍👦 Дети и родители": [child_page, parents_page],
+            "📒 Анкеты": [ankets_page]
         }
     )
     big_logo = "logo_2.png"

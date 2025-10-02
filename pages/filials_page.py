@@ -46,6 +46,7 @@ def rename_filial():
     if st.button('Переименовать', key='rename_season_accept'):
         sql.Filials.rename_filial(season_selector, filial_selector, new_filial_name)
         sql.Groups.rename_filial(season_selector, filial_selector, new_filial_name)
+        sql.Records.rename_filial(season_selector, filial_selector, new_filial_name)
         st.rerun()
 
 

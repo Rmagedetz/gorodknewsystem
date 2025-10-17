@@ -12,6 +12,7 @@ children = sql.Records.get_all_unique_children()
 pay_forms = sql.Payments_forms.get_df()['form']
 options = sql.Payment_options.get_df()['option']
 pay_ids = payments_df['id']
+seasons = sql.Seasons.get_df()['season_name']
 
 payments_show = st.dataframe(payments_df,
                              column_config={
@@ -31,6 +32,11 @@ payments_show = st.dataframe(payments_df,
 
 @st.dialog("Добавление платежа")
 def add_payment():
+    season_selector = st.selectbox('Сезон', seasons, key='season_selector')
+    filials = sql.Filials.get_df(season_name=season_selector)['filial_name']
+    filial_selector = st.selectbox('Филиал', filials, key='filial_selector')
+    groups = sql.Groups.get_df(season_name=season_selector, filial_name=filial_selector)['group_name']
+    group_selector = st.selectbox('Группа', groups, key='group_selector')
     child_selector = st.selectbox('Ребенок', children)
     parents = sql.Records.get_parent_for_child(child_selector)
     parents_selector = st.selectbox('Родитель', parents)
@@ -42,12 +48,21 @@ def add_payment():
         sql.Payments.add_object(
             datetime=datetime.datetime.now(),
             account=user,
+            season_name=season_selector,
+            group_name=group_selector,
             child_name=child_selector,
             parent_name=parents_selector,
             pay_form=pay_form_selector,
             pay_sum=summa,
             option=option_selector,
             comment=comment
+        )
+        sql.Records.update_record_status(
+            season_name=season_selector,
+            filial_name=filial_selector,
+            group_name=group_selector,
+            parent_name=parents_selector,
+            child_name=child_selector
         )
         st.rerun()
 

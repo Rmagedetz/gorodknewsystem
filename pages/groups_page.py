@@ -11,7 +11,8 @@ st.dataframe(groups_df, column_config={
     'group_name': st.column_config.Column('Название группы'),
     'start_date': st.column_config.DateColumn('Дата начала', format='DD.MM.YYYY'),
     'end_date': st.column_config.DateColumn('Дата окончания', format='DD.MM.YYYY'),
-    'capacity': st.column_config.Column('Вместимость')
+    'capacity': st.column_config.Column('Вместимость'),
+    'days': st.column_config.Column('Дн.')
 }, hide_index=True)
 
 
@@ -24,6 +25,7 @@ def add_group():
     group_name = st.text_input('Название группы')
     start_date = st.date_input('Дата начала', format='DD.MM.YYYY')
     end_date = st.date_input('Дата окончания', format='DD.MM.YYYY')
+    days = (end_date - start_date).days
     capacity = st.number_input('Вместимость', min_value=0)
     if st.button("Добавить группу", key='add_group_accept'):
         sql.Groups.add_record(
@@ -32,7 +34,8 @@ def add_group():
             group_name=group_name,
             start_date=start_date,
             end_date=end_date,
-            capacity=capacity
+            capacity=capacity,
+            days=days
         )
         st.rerun()
 

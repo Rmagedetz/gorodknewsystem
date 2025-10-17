@@ -174,6 +174,7 @@ class Groups(Base):
     group_name = Column(String(100), nullable=False)
     start_date = Column(Date)
     end_date = Column(Date)
+    days = Column(Integer)
     capacity = Column(Integer)
 
     __table_args__ = (
@@ -205,6 +206,13 @@ class Groups(Base):
             group = session.query(cls).filter_by(season_name=season_name,
                                                  group_name=group_name).first()
             return group.filial_name
+
+    @classmethod
+    def get_days_for_group_in_season(cls, season_name, group_name):
+        with session_scope() as session:
+            group = session.query(cls).filter_by(season_name=season_name,
+                                                 group_name=group_name).first()
+            return group.days
 
     @classmethod
     def rename_group(cls, season_name, filial_name, group_name, new_group_name):
@@ -283,6 +291,15 @@ class Records(Base):
             name="uix_record_status_unique",
         ),
     )
+    @classmethod
+    def update_record_status(cls, season_name, filial_name, group_name,
+                             child_name, parent_name):
+        with session_scope() as session:
+            session.query(cls).filter_by(season_name=season_name,
+                                         filial_name=filial_name,
+                                         group_name=group_name,
+                                         child_name=child_name,
+                                         parent_name=parent_name).update({"record_status": "1о"})
 
     @classmethod
     def add_object(cls, **parameters):
@@ -615,6 +632,8 @@ class Payments(Base):
     id = Column(Integer, primary_key=True)
     datetime = Column(DateTime)
     account = Column(String(100), nullable=False)
+    season_name = Column(String(100), nullable=False)
+    group_name = Column(String(100), nullable=False)
     child_name = Column(String(100), nullable=False)
     parent_name = Column(String(100), nullable=False)
     pay_form = Column(String(100), nullable=False)
@@ -633,6 +652,44 @@ class Payments(Base):
         with session_scope() as session:
             record = session.query(cls).filter_by(**parameters).first()
             session.delete(record)
+
+    @classmethod
+    def get_df(cls, **parameters):
+        with session_scope() as session:
+            try:
+                columns = [c.name for c in cls.__table__.columns]
+                query = session.query(*[getattr(cls, col) for col in columns]).filter_by(**parameters)
+                data = query.all()
+                obj_df = pd.DataFrame.from_records(data, columns=columns)
+                obj_df.index += 1
+                return obj_df
+            except:
+                return pd.DataFrame()
+
+
+class Visits(Base):
+    __tablename__ = 'visits'
+
+    visit_id = Column(Integer, primary_key=True)
+
+    season_name = Column(String(100), nullable=False)
+    filial_name = Column(String(100), nullable=False)
+    child_name = Column(String(100), nullable=False)
+    parent_name = Column(String(100), nullable=False)
+    group_name = Column(String(100), nullable=False)
+    day_number = Column(Integer, nullable=False)
+    visit_status = Column(String(10), nullable=False)
+
+    UniqueConstraint(
+        "season_name",
+        "filial_name",
+        "group_name",
+        "parent_name",
+        "child_name",
+        "day_number",
+        "visit_status",
+        name="uix_record_status_unique",
+    )
 
     @classmethod
     def get_df(cls, **parameters):
@@ -687,8 +744,6 @@ class Debits(Base):
                 return obj_df
             except:
                 return pd.DataFrame()
-
-
 
 
 Base.metadata.create_all(bind=engine)

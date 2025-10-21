@@ -50,6 +50,67 @@ payments_df = sql.Payments.get_df(
     group_name=group_selector
 )
 
+ankets = sql.Ankets.get_df()
+childs_in_group = records_df.merge(ankets, left_on='child_name', right_on='name', how='left')
+
+column_config = {
+    'child_name': st.column_config.Column('ФИО',
+                                          width='medium',
+                                          help='ФИО ребенка'),
+    'child_birthday': st.column_config.DateColumn('ДР',
+                                                  format='DD.MM.YY',
+                                                  help='День рождения',
+                                                  width='small'),
+    'parent_main_name': st.column_config.Column('ФИО Р',
+                                                width='medium',
+                                                help='ФИО Родителя'),
+    'parent_main_phone': st.column_config.Column('Тел.',
+                                                 width=130,
+                                                 help='Телефон родителя'),
+    'parent_add': st.column_config.Column('ФИО ДР',
+                                          width='medium',
+                                          help='ФИО другого родственника'),
+    'phone_add': st.column_config.Column('Доб. тел.',
+                                         width=130,
+                                         help='Телефон другого родственника'),
+    'leave': st.column_config.Column('У',
+                                     width=40,
+                                     help='Уходит сам'),
+    'addr': st.column_config.Column('Адр.',
+                                    width='medium',
+                                    help='Адрес'),
+    'oms': st.column_config.Column('ОМС',
+                                   width=125,
+                                   help='Полис'),
+    'disease': st.column_config.Column('Заболевания',
+                                       width=125,
+                                       help='Заболевания'),
+    'allergy': st.column_config.Column('Аллергия',
+                                       width=125,
+                                       help='Аллергия'),
+    'other': st.column_config.Column('Травмы',
+                                     width=125,
+                                     help='Травмы'),
+    'physic': st.column_config.Column('Ограничения',
+                                      width=125,
+                                      help='Ограничения'),
+    'swimm': st.column_config.Column('Бассенйн',
+                                     width=125,
+                                     help='Бассенйн'),
+    'jacket_swimm': st.column_config.Column('Нарукавники',
+                                            width=125,
+                                            help='Нарукавники'),
+    'hobby': st.column_config.Column('Хобби',
+                                     width='medium',
+                                     help='Хобби'),
+    'additional_info': st.column_config.Column('Доп данные',
+                                               width='medium',
+                                               help='Доп данные'),
+    'additional_contact': st.column_config.Column('Доп контакт',
+                                                  width='medium',
+                                                  help='Кто кроме родителя забирает ребенка')
+}
+
 # --- Объединение данных ---
 if not records_df.empty:
     merged = records_df.merge(parents_df, on='parent_name', how='left', suffixes=('', '_p'))
@@ -109,6 +170,27 @@ for day in range(1, group_data + 1):
      'Список на шкафчики',
      'Бассейн',
      'Адреса'])
+
+with group_list_tab:
+    show = childs_in_group[['child_name',
+                            'child_birthday',
+                            'parent_main_name',
+                            'parent_main_phone',
+                            'parent_add',
+                            'phone_add',
+                            'leave',
+                            'addr',
+                            'oms',
+                            'disease',
+                            'allergy',
+                            'other',
+                            'physic',
+                            'swimm',
+                            'jacket_swimm',
+                            'hobby']]
+    group_df = st.dataframe(show,
+                            column_config=column_config,
+                            hide_index=True)
 
 with visits_tab:
     # --- Отображение редактора ---
@@ -258,3 +340,43 @@ with payments_tab:
                 comment=''
             )
         st.rerun()
+
+with childrens_tab:
+    show = childs_in_group[['child_name',
+                            'child_birthday',
+                            'disease',
+                            'allergy',
+                            'physic',
+                            'other',
+                            'leave',
+                            'jacket_swimm',
+                            'additional_info',
+                            'additional_contact']]
+    df = st.dataframe(show, column_config=column_config, hide_index=True)
+
+with drive_tab:
+    show = childs_in_group[['child_name',
+                            'child_birthday',
+                            'parent_name',
+                            'parent_main_phone']]
+    df = st.dataframe(show, column_config=column_config, hide_index=True)
+
+with locker_list_tab:
+    for _, row in childs_in_group.iterrows():
+        with st.container(border=True, width=300):
+            st.header(row['child_name'])
+
+with pool_list_tab:
+    show = childs_in_group[['child_name',
+                            'parent_main_phone',
+                            'physic',
+                            'swimm',
+                            'jacket_swimm']]
+    df = st.dataframe(show, column_config=column_config, hide_index=True)
+
+with adress_tab:
+    show = childs_in_group[['child_name',
+                            'addr',
+                            'parent_main_phone',
+                            'parent_main_name']]
+    df = st.dataframe(show, column_config=column_config, hide_index=True)

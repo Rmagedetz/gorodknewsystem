@@ -111,6 +111,7 @@ column_config = {
                                                   help='Кто кроме родителя забирает ребенка')
 }
 
+
 # --- Объединение данных ---
 if not records_df.empty:
     merged = records_df.merge(parents_df, on='parent_name', how='left', suffixes=('', '_p'))

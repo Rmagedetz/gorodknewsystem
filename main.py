@@ -56,6 +56,8 @@ parents_page = st.Page("pages/parents_page.py", title="Родители",
 
 ankets_page = st.Page("pages/ankets_page.py", title="Анкеты",
                       icon=":material/frame_person:")
+ankets_viewer_page = st.Page('pages/ankets_viewer_page.py', title='Просмотрщик анкет',
+                             icon=":material/recent_actors:")
 
 payments_forms_page = st.Page("pages/payments_forms_page.py", title="Формы оплаты",
                               icon=":material/credit_card_gear:")
@@ -73,7 +75,7 @@ if st.session_state.logged_in:
             "📚 Записи и группы": [records_page, group_card_page],
             "💳 Платежи и списания": [payments_forms_page, payments_options_page, payments_page, debits_page],
             "👨‍👨‍👦 Дети и родители": [child_page, parents_page],
-            "📒 Анкеты": [ankets_page]
+            "📒 Анкеты": [ankets_page, ankets_viewer_page]
         }
     )
     big_logo = "logo_2.png"

@@ -250,6 +250,16 @@ class Groups(Base):
             except:
                 return pd.DataFrame()
 
+    @classmethod
+    def get_start_end(cls, season, filial, group):
+        with session_scope() as session:
+            group = session.query(cls).filter_by(season_name=season,
+                                                 filial_name=filial,
+                                                 group_name=group).first()
+            return {'start_date': group.start_date,
+                    'end_date': group.start_date}
+
+
 
 class Records(Base):
     __tablename__ = "records"

@@ -5,6 +5,16 @@ import streamlit as st
 import sql
 from sqlalchemy.orm import Session
 
+from io import BytesIO
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, Border, Side
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.page import PageMargins
+from openpyxl.worksheet.pagebreak import Break
+import copy
+
 # Получение разрешений пользователя
 permission = st.session_state.user_permissions['editing_groups'][0]
 
@@ -110,7 +120,6 @@ column_config = {
                                                   width='medium',
                                                   help='Кто кроме родителя забирает ребенка')
 }
-
 
 # --- Объединение данных ---
 if not records_df.empty:
@@ -355,17 +364,426 @@ with childrens_tab:
                             'additional_contact']]
     df = st.dataframe(show, column_config=column_config, hide_index=True)
 
+
+    def create_ds(df):
+        output = BytesIO()
+
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                        top=Side(style='thin'), bottom=Side(style='thin'))
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        ws = wb.create_sheet("Лист ознакомления")
+
+        # ws.column_dimensions["A"].width = 42
+
+        num_rows = ws.max_row + 4
+
+        row_num = 0
+        for _, row in df.iterrows():
+            cell = ws.cell(row=num_rows + row_num, column=1, value=row_num + 1)
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=2, value=row['child_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            try:
+                cell = ws.cell(row=num_rows + row_num, column=3, value=row['child_birthday'].strftime('%d.%m.%Y'))
+                cell.font = Font(name='TimesNewRoman', size=9)
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                cell.border = border
+            except:
+                cell = ws.cell(row=num_rows + row_num, column=3, value="")
+                cell.font = Font(name='TimesNewRoman', size=9)
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=4, value=row['disease'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=5, value=row['allergy'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=6, value=row['other'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=7, value=row['physic'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=8, value=row['leave'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=9, value=row['jacket_swimm'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=10, value=row['additional_info'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=11, value=row['additional_contact'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            row_num += 1
+
+        num_rows = ws.max_row + 2
+
+        for counter in range(5):
+            cell = ws.cell(row=num_rows + counter, column=1, value="Ознакомлен/а __________________  "
+                                                                   "______________________/_____________/ “____” ______ "
+                                                                   "202__ г.")
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+            ws.merge_cells(start_row=num_rows + counter, start_column=1, end_row=num_rows + counter, end_column=11)
+
+        cell = ws.cell(row=1, column=1, value="Лист ознакомления инструкторов группы по уходу и присмотру об "
+                                              "особенностях здоровья детей")
+        cell.font = Font(name='TimesNewRoman', size=10, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=11)
+
+        dates = sql.Groups.get_start_end(season_selector, filial_selector, group_selector)
+        cell = ws.cell(row=2, column=1,
+                       value=f"Довожу до вашего сведения особенности здоровья детей группы {group_selector} "
+                             f"находящихся в клубе в период с {dates['start_date'].strftime('%d.%m.%Y')} "
+                             f"г. по {dates['end_date'].strftime('%d.%m.%Y')} г.")
+        cell.font = Font(name='TimesNewRoman', size=9)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=11)
+        ws.row_dimensions[2].height = 30
+
+        cell = ws.cell(row=3, column=1,
+                       value=f"Евдокимова Е.Б. ___________________")
+        cell.font = Font(name='TimesNewRoman', size=9)
+        cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=11)
+
+        cell = ws.cell(row=4, column=1, value=f"№")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=2, value=f"ФИО ребенка")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=3, value=f"Дата рождения")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=4, value=f"Заболевания")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=5, value=f"Аллергия")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=6, value=f"Травмы")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=7, value=f"Ограничения")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=8, value=f"Уходит сам")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=9, value=f"Нарукавники")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=10, value=f"Доп. данные")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=11, value=f"Кто кроме родителя забирает ребенка?")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        ws.column_dimensions["A"].width = 3
+        ws.column_dimensions["B"].width = 17
+        ws.column_dimensions["C"].width = 9
+        ws.column_dimensions["D"].width = 10
+
+        ws.column_dimensions["E"].width = 9
+        ws.column_dimensions["F"].width = 9
+        ws.column_dimensions["G"].width = 9
+        ws.column_dimensions["H"].width = 9
+        ws.column_dimensions["I"].width = 9
+
+        ws.column_dimensions["J"].width = 15
+        ws.column_dimensions["K"].width = 15
+
+        page_setup = ws.page_setup
+        page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
+
+    if st.button("Скачать список", key="download_list"):
+        excel_file = create_ds(show)
+        st.download_button(
+            label="Нажми для скачивания списка",
+            data=excel_file,
+            file_name=f"Лист ознакомления_{group_selector}_{filial_selector}_{season_selector}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
 with drive_tab:
+    col1, col2 = st.columns(2)
+    with col1:
+        drive_day = st.date_input('Дата поездки', format='DD.MM.YYYY')
+    with col2:
+        drive_adr = st.text_input('Адрес поездки')
     show = childs_in_group[['child_name',
                             'child_birthday',
                             'parent_name',
                             'parent_main_phone']]
     df = st.dataframe(show, column_config=column_config, hide_index=True)
 
+
+    def create_drive_list(df):
+        output = BytesIO()
+
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                        top=Side(style='thin'), bottom=Side(style='thin'))
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        ws = wb.create_sheet("Поездка")
+
+        num_rows = ws.max_row + 4
+
+        row_num = 0
+        for _, row in df.iterrows():
+            cell = ws.cell(row=num_rows + row_num, column=1, value=row_num + 1)
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=2, value=row['child_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            try:
+                cell = ws.cell(row=num_rows + row_num, column=3, value=row['child_birthday'].strftime('%d.%m.%Y'))
+                cell.font = Font(name='TimesNewRoman', size=9)
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                cell.border = border
+            except:
+                cell = ws.cell(row=num_rows + row_num, column=3, value="")
+                cell.font = Font(name='TimesNewRoman', size=9)
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=4, value=row['parent_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=5, value=row['parent_main_phone'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            row_num += 1
+
+        num_rows = ws.max_row + 1
+
+        cell = ws.cell(row=num_rows, column=1, value="Сопровождающие")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=num_rows, start_column=1, end_row=num_rows, end_column=5)
+
+        num_rows = ws.max_row + 1
+        cell = ws.cell(row=num_rows, column=1, value="ФИО сопровождающего")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.border = border
+        ws.merge_cells(start_row=num_rows, start_column=1, end_row=num_rows, end_column=2)
+
+        cell = ws.cell(row=num_rows, column=3, value="Должность")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.border = border
+
+        cell = ws.cell(row=num_rows, column=4, value="Телефон")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.border = border
+        ws.merge_cells(start_row=num_rows, start_column=4, end_row=num_rows, end_column=5)
+
+        num_rows = ws.max_row + 1
+
+        for counter in range(3):
+            cell = ws.cell(row=num_rows + counter, column=1, value="_")
+            cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+            cell.border = border
+            ws.merge_cells(start_row=num_rows + counter, start_column=1, end_row=num_rows + counter, end_column=2)
+
+            cell = ws.cell(row=num_rows + counter, column=3, value="_")
+            cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + counter, column=4, value="_")
+            cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+            cell.border = border
+            ws.merge_cells(start_row=num_rows + counter, start_column=4, end_row=num_rows + counter, end_column=5)
+
+            ws.row_dimensions[num_rows + counter].height = 30
+
+        num_rows = ws.max_row + 2
+
+        cell = ws.cell(row=num_rows, column=1, value="ИП Евдокимова Е.Б. __________________________")
+        cell.font = Font(name='TimesNewRoman', size=9)
+
+        num_rows = ws.max_row + 2
+
+        cell = ws.cell(row=num_rows, column=1, value="Подпись ответственного сопровождающего   "
+                                                     "______________/___________________________")
+        cell.font = Font(name='TimesNewRoman', size=9)
+
+        cell = ws.cell(row=1, column=1, value="Список пассажиров, которым разрешается (помимо водителей) находиться в "
+                                              "автобусе в процессе перевозки")
+        ws.row_dimensions[1].height = 30
+        cell.alignment = Alignment(horizontal="center", vertical="top", wrap_text=True)
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=5)
+
+        cell = ws.cell(row=2, column=1, value=f"Дата поездки: {drive_day.strftime('%d.%m.%Y')}")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=2)
+
+        cell = ws.cell(row=2, column=3, value=f"Адрес: {drive_adr}")
+        ws.merge_cells(start_row=2, start_column=3, end_row=2, end_column=5)
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+
+        cell = ws.cell(row=4, column=1, value=f"№")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=2, value=f"ФИО пассажира")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=3, value=f"Дата рождения")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=4, value=f"ФИО родителя")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=4, column=5, value=f"Телефон")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        ws.column_dimensions["A"].width = 3
+        ws.column_dimensions["B"].width = 20
+        ws.column_dimensions["C"].width = 20
+        ws.column_dimensions["D"].width = 20
+        ws.column_dimensions["E"].width = 20
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
+
+    if st.button("Скачать список", key="download_drive"):
+        excel_file = create_drive_list(show)
+        st.download_button(
+            label="Нажми для скачивания списка",
+            data=excel_file,
+            file_name=f"Поездка_{drive_day}_{group_selector}_{filial_selector}_{season_selector}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
 with locker_list_tab:
-    for _, row in childs_in_group.iterrows():
-        with st.container(border=True, width=300):
-            st.header(row['child_name'])
+    children = list(childs_in_group['child_name'])
+    show = st.data_editor(children, hide_index=True, column_config={'value': 'ФИО ребенка'})
+
+
+    def create_locker_list(chld_lst):
+        output = BytesIO()
+
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                        top=Side(style='thin'), bottom=Side(style='thin'))
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        ws = wb.create_sheet("Шкафчики")
+
+        num_rows = 1
+
+        row_num = 0
+        for name in chld_lst:
+            cell = ws.cell(row=num_rows + row_num, column=1, value=name)
+            cell.font = Font(name='TimesNewRoman', size=30)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+            ws.row_dimensions[num_rows + row_num].height = 70
+
+            row_num += 1
+
+        ws.column_dimensions["A"].width = 60
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
+
+    if st.button("Скачать список", key="download_lockers"):
+        excel_file = create_locker_list(children)
+        st.download_button(
+            label="Нажми для скачивания списка",
+            data=excel_file,
+            file_name=f"Шкафчики_{group_selector}_{filial_selector}_{season_selector}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 with pool_list_tab:
     show = childs_in_group[['child_name',
@@ -375,9 +793,222 @@ with pool_list_tab:
                             'jacket_swimm']]
     df = st.dataframe(show, column_config=column_config, hide_index=True)
 
+
+    def create_pool_list(df):
+        output = BytesIO()
+
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                        top=Side(style='thin'), bottom=Side(style='thin'))
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        ws = wb.create_sheet("Бассейн")
+
+        num_rows = ws.max_row + 2
+
+        row_num = 0
+        for _, row in df.iterrows():
+            cell = ws.cell(row=num_rows + row_num, column=1, value=row_num + 1)
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=2, value=row['child_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=3, value=row['parent_main_phone'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=4, value=row['physic'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=5, value=row['swimm'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=6, value=row['jacket_swimm'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            row_num += 1
+
+        num_rows = ws.max_row + 1
+
+        for counter in range(3):
+            cell = ws.cell(row=num_rows + counter, column=2,
+                           value="Ознакомлен/а __________________  ______________________/_____________/ “____” "
+                                 "______ 202__ г.")
+            cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+            ws.merge_cells(start_row=num_rows + counter, start_column=2, end_row=num_rows + counter, end_column=6)
+
+            ws.row_dimensions[num_rows + counter].height = 30
+
+        num_rows = ws.max_row + 2
+
+        cell = ws.cell(row=2, column=1, value=f"№")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=2, value=f"ФИО Ребенка")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=3, value=f"Телефон")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=4, value=f"Ограничения")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=5, value=f"Бассейн")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=6, value=f"Нарукавники")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=1, column=1, value=f"Лист для посещения бассейна группа {group_selector}")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=6)
+
+        ws.column_dimensions["A"].width = 3
+        ws.column_dimensions["B"].width = 20
+        ws.column_dimensions["C"].width = 15
+        ws.column_dimensions["D"].width = 15
+        ws.column_dimensions["E"].width = 15
+        ws.column_dimensions["F"].width = 15
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
+
+    if st.button("Скачать список", key="download_pool"):
+        excel_file = create_pool_list(show)
+        st.download_button(
+            label="Нажми для скачивания списка",
+            data=excel_file,
+            file_name=f"Бассейн_{group_selector}_{filial_selector}_{season_selector}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
 with adress_tab:
     show = childs_in_group[['child_name',
                             'addr',
                             'parent_main_phone',
                             'parent_main_name']]
     df = st.dataframe(show, column_config=column_config, hide_index=True)
+
+
+    def create_addr_list(df):
+        output = BytesIO()
+
+        border = Border(left=Side(style='thin'), right=Side(style='thin'),
+                        top=Side(style='thin'), bottom=Side(style='thin'))
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        ws = wb.create_sheet("Адреса")
+
+        num_rows = ws.max_row + 2
+
+        row_num = 0
+        for _, row in df.iterrows():
+            cell = ws.cell(row=num_rows + row_num, column=1, value=row_num + 1)
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=2, value=row['child_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=3, value=row['addr'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=4, value=row['parent_main_phone'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+
+            cell = ws.cell(row=num_rows + row_num, column=5, value=row['parent_main_name'])
+            cell.font = Font(name='TimesNewRoman', size=9)
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+            row_num += 1
+
+        num_rows = ws.max_row + 1
+
+        cell = ws.cell(row=2, column=1, value=f"№")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=2, value=f"ФИО Ребенка")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=3, value=f"Адрес проживания")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=4, value=f"Телефон")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=2, column=5, value=f"ФИО Родителя")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+
+        cell = ws.cell(row=1, column=1, value=f"Адреса группа {group_selector}")
+        cell.font = Font(name='TimesNewRoman', size=9, bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = border
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=5)
+
+        ws.column_dimensions["A"].width = 3
+        ws.column_dimensions["B"].width = 20
+        ws.column_dimensions["C"].width = 15
+        ws.column_dimensions["D"].width = 15
+        ws.column_dimensions["E"].width = 15
+
+        wb.save(output)
+        output.seek(0)
+        return output
+
+
+    if st.button("Скачать список", key="download_addr"):
+        excel_file = create_addr_list(show)
+        st.download_button(
+            label="Нажми для скачивания списка",
+            data=excel_file,
+            file_name=f"Адреса_{group_selector}_{filial_selector}_{season_selector}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )

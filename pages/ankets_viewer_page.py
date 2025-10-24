@@ -51,7 +51,7 @@ data = ankets_df[ankets_df['name'] == child_selector].reset_index()
 col1, col2, col3 = st.columns(3)
 with col1:
     with st.container(border=True, height=600):
-        st.subheader('Данные ребенка')
+        st.subheader('🧒 Данные ребенка')
         st.divider()
         st.write(f'ФИО ребенка: {data['name'][0]}')
         st.write(f'ФИО родителя: {data['parent_main_name'][0]}')
@@ -73,7 +73,7 @@ with col1:
 
 with col2:
     with st.container(border=True, height=600):
-        st.subheader('Данные о здоровье')
+        st.subheader('⚕️ Данные о здоровье')
         st.divider()
 
         if data['disease'][0] == 'заболеваний нет':
@@ -98,7 +98,7 @@ with col2:
 
 with col3:
     with st.container(border=True, height=600):
-        st.subheader('Дополнительные сведения')
+        st.subheader('📝 Дополнительные сведения')
         st.divider()
 
         if data['swimm'][0] == 'да':
@@ -117,6 +117,7 @@ with col3:
         st.write(f'Доп. информация: {data['additional_info'][0]}')
 
 with st.container(border=True):
+    st.subheader('✉️ Общие данные')
     st.write(f'Как узнали про Городок: {data['referer'][0]}')
     st.write(f'e-mail: {data['email'][0]}')
     st.write(f'Прогулки: {data['departures'][0]}')
@@ -494,10 +495,10 @@ def create_ds(df):
     return output
 
 
-if st.button("Скачать анкету"):
+if st.button("📎 Скачать анкету в .xlsx"):
     excel_file = create_ds(data)
     st.download_button(
-        label="Нажми для скачивания анкеты",
+        label="💾Нажми для скачивания анкеты",
         data=excel_file,
         file_name=f"Анкета_{data['name'][0]}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

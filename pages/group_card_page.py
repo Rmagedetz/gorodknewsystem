@@ -172,14 +172,14 @@ for day in range(1, group_data + 1):
 
 (group_list_tab, visits_tab, childrens_tab, drive_tab,
  payments_tab, locker_list_tab, pool_list_tab, adress_tab) = st.tabs(
-    ['Список',
-     'Посещаемость',
-     'Лист ознакомления',
-     'Поездка',
-     'Оплаты',
-     'Список на шкафчики',
-     'Бассейн',
-     'Адреса'])
+    ['📄Список',
+     '✅Посещаемость',
+     '📄Лист ознакомления',
+     '🚌Поездка',
+     '💳Оплаты',
+     '🔢Список на шкафчики',
+     '🏊Бассейн',
+     '📍Адреса'])
 
 with group_list_tab:
     show = childs_in_group[['child_name',
@@ -561,7 +561,7 @@ with childrens_tab:
     if st.button("Скачать список", key="download_list"):
         excel_file = create_ds(show)
         st.download_button(
-            label="Нажми для скачивания списка",
+            label="💾Нажми для скачивания списка",
             data=excel_file,
             file_name=f"Лист ознакомления_{group_selector}_{filial_selector}_{season_selector}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -735,7 +735,7 @@ with drive_tab:
     if st.button("Скачать список", key="download_drive"):
         excel_file = create_drive_list(show)
         st.download_button(
-            label="Нажми для скачивания списка",
+            label="💾Нажми для скачивания списка",
             data=excel_file,
             file_name=f"Поездка_{drive_day}_{group_selector}_{filial_selector}_{season_selector}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -779,7 +779,7 @@ with locker_list_tab:
     if st.button("Скачать список", key="download_lockers"):
         excel_file = create_locker_list(children)
         st.download_button(
-            label="Нажми для скачивания списка",
+            label="💾Нажми для скачивания списка",
             data=excel_file,
             file_name=f"Шкафчики_{group_selector}_{filial_selector}_{season_selector}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -905,7 +905,7 @@ with pool_list_tab:
     if st.button("Скачать список", key="download_pool"):
         excel_file = create_pool_list(show)
         st.download_button(
-            label="Нажми для скачивания списка",
+            label="💾Нажми для скачивания списка",
             data=excel_file,
             file_name=f"Бассейн_{group_selector}_{filial_selector}_{season_selector}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -1007,7 +1007,7 @@ with adress_tab:
     if st.button("Скачать список", key="download_addr"):
         excel_file = create_addr_list(show)
         st.download_button(
-            label="Нажми для скачивания списка",
+            label="💾Нажми для скачивания списка",
             data=excel_file,
             file_name=f"Адреса_{group_selector}_{filial_selector}_{season_selector}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

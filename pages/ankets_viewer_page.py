@@ -98,7 +98,7 @@ with col2:
 
 with col3:
     with st.container(border=True, height=600):
-        st.subheader('📝 Дополнительные сведения')
+        st.subheader('📝 Дополнительно')
         st.divider()
 
         if data['swimm'][0] == 'да':

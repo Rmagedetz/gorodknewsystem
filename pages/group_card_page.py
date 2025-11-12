@@ -60,6 +60,7 @@ payments_df = sql.Payments.get_df(
     group_name=group_selector
 )
 
+
 ankets = sql.Ankets.get_df()
 childs_in_group = records_df.merge(ankets, left_on='child_name', right_on='name', how='left')
 childs_in_group = childs_in_group.sort_values(by='child_name', ascending=True)

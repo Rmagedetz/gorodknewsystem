@@ -16,4 +16,5 @@ def get_quiz_data():
                   "swimm", "jacket_swimm", "hobby", "school", "additional_info", "departures", "referer", "ok",
                   "mailing", "personal_accept", "oms"]
     # df["age"] = 0
+
     return df

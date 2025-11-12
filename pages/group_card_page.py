@@ -62,6 +62,7 @@ payments_df = sql.Payments.get_df(
 
 ankets = sql.Ankets.get_df()
 childs_in_group = records_df.merge(ankets, left_on='child_name', right_on='name', how='left')
+childs_in_group = childs_in_group.sort_values(by='child_name', ascending=True)
 
 column_config = {
     'child_name': st.column_config.Column('ФИО',
@@ -138,6 +139,7 @@ if not records_df.empty:
     available_cols = [c for c in ['child_name', 'child_age', 'parent_name', 'parent_phone', 'record_status', 'comment']
                       if c in merged.columns]
     merged = merged[available_cols].copy()
+    merged = merged.sort_values(by='child_name', ascending=True)
     merged.fillna('', inplace=True)
 else:
     # Если нет записей, создаем пустой DataFrame с нужными колонками

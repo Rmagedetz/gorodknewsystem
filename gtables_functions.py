@@ -10,7 +10,7 @@ def get_quiz_data():
     sheet = google_data.worksheet("Лист1")
     all_values = sheet.get_all_values()
 
-    df = pd.DataFrame(all_values).iloc[2:, :-6]
+    df = pd.DataFrame(all_values).iloc[2:, :-9]
     df.columns = ["email", "name", "child_birthday", "parent_main_name", "parent_main_phone", "parent_add",
                   "phone_add", "leave", "additional_contact", "addr", "disease", "allergy", "other", "physic",
                   "swimm", "jacket_swimm", "hobby", "school", "additional_info", "departures", "referer", "ok",

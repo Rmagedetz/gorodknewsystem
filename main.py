@@ -67,6 +67,8 @@ payments_page = st.Page("pages/payments_page.py", title="Платежи",
                         icon=":material/currency_ruble:")
 debits_page = st.Page("pages/debits_page.py", title="Списания",
                       icon=":material/payment_arrow_down:")
+bot_page = st.Page('pages/bot_page.py', title='Рассылка в боте',
+                   icon=":material/smart_toy:")
 
 if st.session_state.logged_in:
     pg = st.navigation(
@@ -75,7 +77,8 @@ if st.session_state.logged_in:
             "📚 Записи и группы": [records_page, group_card_page],
             "💳 Платежи и списания": [payments_forms_page, payments_options_page, payments_page, debits_page],
             "👨‍👨‍👦 Дети и родители": [child_page, parents_page],
-            "📒 Анкеты": [ankets_page, ankets_viewer_page]
+            "📒 Анкеты": [ankets_page, ankets_viewer_page],
+            "🤖 Бот": [bot_page]
         }
     )
     big_logo = "logo_2.png"

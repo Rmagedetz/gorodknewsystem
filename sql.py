@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy import (Column, Integer, String, Date, Float, create_engine, ForeignKey, func, Boolean, case,
-                        UniqueConstraint, DateTime, Text, distinct, text, DECIMAL)
+                        UniqueConstraint, DateTime, Text, distinct, text, DECIMAL, BIGINT)
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, aliased, joinedload
 from sqlalchemy.exc import IntegrityError
 from contextlib import contextmanager
@@ -260,7 +260,6 @@ class Groups(Base):
                     'end_date': group.start_date}
 
 
-
 class Records(Base):
     __tablename__ = "records"
 
@@ -301,6 +300,7 @@ class Records(Base):
             name="uix_record_status_unique",
         ),
     )
+
     @classmethod
     def update_record_status(cls, season_name, filial_name, group_name,
                              child_name, parent_name):
@@ -741,6 +741,59 @@ class Debits(Base):
         with session_scope() as session:
             record = session.query(cls).filter_by(**parameters).first()
             session.delete(record)
+
+    @classmethod
+    def get_df(cls, **parameters):
+        with session_scope() as session:
+            try:
+                columns = [c.name for c in cls.__table__.columns]
+                query = session.query(*[getattr(cls, col) for col in columns]).filter_by(**parameters)
+                data = query.all()
+                obj_df = pd.DataFrame.from_records(data, columns=columns)
+                obj_df.index += 1
+                return obj_df
+            except:
+                return pd.DataFrame()
+
+class Bot_subscribers(Base):
+    __tablename__ = 'bot_subscribers'
+    id = Column(Integer, primary_key=True)
+    datetime = Column(DateTime)
+
+    subscriber_tg_id = Column(BIGINT, nullable=False)
+    subscriber_tg_first_name = Column(String(100))
+    subscriber_tg_last_name = Column(String(100))
+    subscriber_tg_username = Column(String(100))
+
+    present_accepted = Column(Boolean)
+
+    subscriber_real_first_name = Column(String(100))
+    subscriber_real_last_name = Column(String(100))
+    subscriber_real_username = Column(String(100))
+
+    subscriber_child_name = Column(String(100))
+    subscriber_child_birthday = Column(Date)
+
+    __table_args__ = (
+        UniqueConstraint('subscriber_tg_id', 'subscriber_child_name', name='_tg_child_uc'),
+    )
+
+    @classmethod
+    def add_object(cls, **parameters):
+        with session_scope() as session:
+            add = cls(**parameters)
+            session.add(add)
+
+    @classmethod
+    def delete_record(cls, **parameters):
+        with session_scope() as session:
+            record = session.query(cls).filter_by(**parameters).first()
+            session.delete(record)
+
+    @classmethod
+    def edit_record(cls, tg_id, **parameters):
+        with session_scope() as session:
+            session.query(cls).filter_by(subscriber_tg_id=tg_id).update(parameters)
 
     @classmethod
     def get_df(cls, **parameters):

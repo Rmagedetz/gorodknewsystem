@@ -4,7 +4,7 @@ import telebot
 import time
 import random
 
-BOT2_TOKEN = "8490203969:AAH1DtcCdcL76l8JdkgezPuf_ejv6RrkxuE"
+BOT2_TOKEN = "8534605207:AAFm58K368UwZYdZ2MFJ87BxZQHUz2OwXwA"
 bot2 = telebot.TeleBot(BOT2_TOKEN)
 
 bot_users_data = sql.Bot_subscribers.get_df()

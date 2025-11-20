@@ -48,6 +48,14 @@ column_config['present_accepted'] = st.column_config.CheckboxColumn('Подар�
                                                                     disabled=True, help='Подарок получен', width='small')
 
 column_config['check'] = st.column_config.CheckboxColumn('Добавить', help='Добавить в рассылку', width='small')
+column_config['subscriber_child_birthday'] = st.column_config.DateColumn('ДР ребенка',
+                                                                         width='small',
+                                                                         disabled=True,
+                                                                         format='DD.MM.YYYY')
+column_config['datetime'] = st.column_config.DateColumn('Дата регистрации',
+                                                                         width='small',
+                                                                         disabled=True,
+                                                                         format='DD.MM.YYYY')
 
 edited_df = st.data_editor(
     bot_users_data,

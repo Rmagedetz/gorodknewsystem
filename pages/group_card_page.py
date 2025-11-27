@@ -60,6 +60,16 @@ payments_df = sql.Payments.get_df(
     group_name=group_selector
 )
 
+from_balance_df = sql.Payments_from_balance.get_df(
+    season_name=season_selector,
+    group_name=group_selector
+)
+
+payments_df = pd.concat([
+    payments_df,
+    from_balance_df
+], ignore_index=True)
+
 ankets = sql.Ankets.get_df()
 childs_in_group = records_df.merge(ankets, left_on='child_name', right_on='name', how='left')
 childs_in_group = childs_in_group.sort_values(by='child_name', ascending=True)

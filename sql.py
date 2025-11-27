@@ -95,8 +95,16 @@ class Seasons(Base):
     @classmethod
     def delete_record(cls, **parameters):
         with session_scope() as session:
-            record = session.query(cls).filter_by(**parameters).first()
-            session.delete(record)
+            season = session.query(cls).filter_by(**parameters).first()
+            if not season:
+                raise ValueError("Сезон не найден")
+
+            # Проверяем наличие филиалов
+            filial_exists = session.query(Filials).filter_by(season_name=season.season_name).first()
+            if filial_exists:
+                raise ValueError("Нельзя удалить сезон, в котором есть филиалы")
+
+            session.delete(season)
 
     @classmethod
     def edit_record(cls, name, **parameters):
@@ -137,8 +145,20 @@ class Filials(Base):
     @classmethod
     def delete_record(cls, **parameters):
         with session_scope() as session:
-            record = session.query(cls).filter_by(**parameters).first()
-            session.delete(record)
+            filial = session.query(cls).filter_by(**parameters).first()
+            if not filial:
+                raise ValueError("Филиал не найден")
+
+            # Проверяем наличие групп
+            group_exists = session.query(Groups).filter_by(
+                season_name=filial.season_name,
+                filial_name=filial.filial_name
+            ).first()
+
+            if group_exists:
+                raise ValueError("Нельзя удалить филиал, в котором есть группы")
+
+            session.delete(filial)
 
     @classmethod
     def rename_season(cls, old_season_name, new_season_name):
@@ -190,8 +210,23 @@ class Groups(Base):
     @classmethod
     def delete_record(cls, **parameters):
         with session_scope() as session:
-            record = session.query(cls).filter_by(**parameters).first()
-            session.delete(record)
+            # Ищем группу
+            group = session.query(cls).filter_by(**parameters).first()
+            if not group:
+                raise ValueError("Группа не найдена")
+
+            # Проверяем наличие детей (записей) через таблицу Records
+            record_exists = session.query(Records).filter_by(
+                season_name=group.season_name,
+                filial_name=group.filial_name,
+                group_name=group.group_name
+            ).first()
+
+            if record_exists:
+                raise ValueError("Нельзя удалить группу, в которой есть записи детей")
+
+            # Удаляем группу
+            session.delete(group)
 
     @classmethod
     def edit_record(cls, season_name, filial_name, group_name, **parameters):
@@ -257,7 +292,7 @@ class Groups(Base):
                                                  filial_name=filial,
                                                  group_name=group).first()
             return {'start_date': group.start_date,
-                    'end_date': group.start_date}
+                    'end_date': group.end_date}
 
 
 class Records(Base):
@@ -664,6 +699,56 @@ class Payments(Base):
             session.delete(record)
 
     @classmethod
+    def edit_record(cls, pay_id, **parameters):
+        with session_scope() as session:
+            session.query(cls).filter_by(id=pay_id).update(parameters)
+
+    @classmethod
+    def get_df(cls, **parameters):
+        with session_scope() as session:
+            try:
+                columns = [c.name for c in cls.__table__.columns]
+                query = session.query(*[getattr(cls, col) for col in columns]).filter_by(**parameters)
+                data = query.all()
+                obj_df = pd.DataFrame.from_records(data, columns=columns)
+                obj_df.index += 1
+                return obj_df
+            except:
+                return pd.DataFrame()
+
+
+class Payments_from_balance(Base):
+    __tablename__ = "payments_from_balance"
+    id = Column(Integer, primary_key=True)
+    datetime = Column(DateTime)
+    account = Column(String(100), nullable=False)
+    season_name = Column(String(100), nullable=False)
+    group_name = Column(String(100), nullable=False)
+    child_name = Column(String(100), nullable=False)
+    parent_name = Column(String(100), nullable=False)
+    pay_form = Column(String(100), nullable=False)
+    pay_sum = Column(DECIMAL, nullable=False)
+    option = Column(String(100), nullable=False)
+    comment = Column(String(100), nullable=False)
+
+    @classmethod
+    def add_object(cls, **parameters):
+        with session_scope() as session:
+            add = cls(**parameters)
+            session.add(add)
+
+    @classmethod
+    def delete_record(cls, **parameters):
+        with session_scope() as session:
+            record = session.query(cls).filter_by(**parameters).first()
+            session.delete(record)
+
+    @classmethod
+    def edit_record(cls, pay_id, **parameters):
+        with session_scope() as session:
+            session.query(cls).filter_by(id=pay_id).update(parameters)
+
+    @classmethod
     def get_df(cls, **parameters):
         with session_scope() as session:
             try:
@@ -737,6 +822,11 @@ class Debits(Base):
             session.add(add)
 
     @classmethod
+    def edit_record(cls, pay_id, **parameters):
+        with session_scope() as session:
+            session.query(cls).filter_by(id=pay_id).update(parameters)
+
+    @classmethod
     def delete_record(cls, **parameters):
         with session_scope() as session:
             record = session.query(cls).filter_by(**parameters).first()
@@ -754,6 +844,7 @@ class Debits(Base):
                 return obj_df
             except:
                 return pd.DataFrame()
+
 
 class Bot_subscribers(Base):
     __tablename__ = 'bot_subscribers'

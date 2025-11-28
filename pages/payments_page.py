@@ -88,6 +88,8 @@ def add_payment():
     summa = st.text_input('Сумма')
     if child_balance > 0:
         from_balance_sum = st.number_input('Списать с баланса', min_value=0, max_value=child_balance)
+    else:
+        from_balance_sum = 0
     option_selector = st.selectbox('Тариф', options)
     comment = st.text_area('Комментарий', max_chars=100)
     if st.button('Добавить платеж', key='add_payment_accept'):

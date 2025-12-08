@@ -5,6 +5,7 @@ import json
 import socket
 import pandas as pd
 from pathlib import Path
+import sql
 
 # -------------------------------
 # Файл для хранения данных вебхука

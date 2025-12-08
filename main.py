@@ -1,6 +1,99 @@
 import streamlit as st
-import sql
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+import socket
+import pandas as pd
+from pathlib import Path
 
+# -------------------------------
+# Файл для хранения данных вебхука
+# -------------------------------
+WEBHOOK_DATA_FILE = Path("tilda_webhook_data.json")
+if not WEBHOOK_DATA_FILE.exists():
+    WEBHOOK_DATA_FILE.write_text("[]")  # создаём пустой список
+
+# -------------------------------
+# Универсальный вебхук для Тильды
+# -------------------------------
+class TildaWebhookHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+
+        try:
+            data = json.loads(post_data)
+        except json.JSONDecodeError:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write(b'Invalid JSON')
+            return
+
+        # Сохраняем данные в файл
+        try:
+            with open(WEBHOOK_DATA_FILE, "r+", encoding="utf-8") as f:
+                current_data = json.load(f)
+                current_data.append(data)
+                f.seek(0)
+                json.dump(current_data, f, ensure_ascii=False, indent=2)
+                f.truncate()
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'Success')
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(f'Error: {e}'.encode())
+
+# -------------------------------
+# Запуск сервера вебхука в отдельном потоке
+# -------------------------------
+WEBHOOK_PORT = 8000
+
+def run_webhook_server():
+    server_address = ('', WEBHOOK_PORT)
+    httpd = HTTPServer(server_address, TildaWebhookHandler)
+    print(f'Webhook server running on port {WEBHOOK_PORT}...')
+    httpd.serve_forever()
+
+threading.Thread(target=run_webhook_server, daemon=True).start()
+
+# -------------------------------
+# Определяем локальный IP для ссылки вебхука
+# -------------------------------
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "localhost"
+    finally:
+        s.close()
+    return ip
+
+webhook_url = f"http://{get_local_ip()}:{WEBHOOK_PORT}"
+st.write(f"**Ссылка на вебхук для Тильды:** {webhook_url}")
+
+# -------------------------------
+# Вывод последних данных вебхука
+# -------------------------------
+st.subheader("Последние данные, полученные через вебхук:")
+
+if WEBHOOK_DATA_FILE.exists():
+    with open(WEBHOOK_DATA_FILE, "r", encoding="utf-8") as f:
+        leads = json.load(f)
+    if leads:
+        df = pd.DataFrame(leads)
+        st.dataframe(df)
+    else:
+        st.info("Пока нет данных от вебхука.")
+else:
+    st.info("Файл с данными вебхука не найден.")
+
+# -------------------------------
+# Настройка Streamlit (твой код остаётся без изменений)
+# -------------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 

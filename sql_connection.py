@@ -9,6 +9,7 @@ db_host = '91.193.182.16'
 db_port = "3310"
 db_name = 'g_db_3'
 
+
 sql_connection_string = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 engine = create_engine(sql_connection_string)

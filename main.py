@@ -74,6 +74,7 @@ debits_page = st.Page("pages/debits_page.py", title="Списания",
 bot_page = st.Page('pages/bot_page.py', title='Рассылка в боте',
                    icon=":material/smart_toy:")
 
+
 if st.session_state.logged_in:
     pg = st.navigation(
         {

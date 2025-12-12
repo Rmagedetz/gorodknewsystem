@@ -29,5 +29,14 @@ ENV STREAMLIT_SERVER_PORT=8000
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
 ENV STREAMLIT_SERVER_HEADLESS=true
 
-# Команда запуска
-CMD ["streamlit", "run", "main.py"]
+# Команда запуска:
+# 1) создаём каталог .streamlit
+# 2) если переменная STREAMLIT_SECRETS задана — пишем её содержимое в /app/.streamlit/secrets.toml
+# 3) запускаем Streamlit
+CMD sh -c '\
+  mkdir -p /app/.streamlit && \
+  if [ -n "$STREAMLIT_SECRETS" ]; then \
+    printf "%s" "$STREAMLIT_SECRETS" > /app/.streamlit/secrets.toml; \
+  fi && \
+  streamlit run main.py \
+'
